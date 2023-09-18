@@ -1,0 +1,16 @@
+version: '3.1'
+
+services:
+  webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webserver
+    command: uvicorn src.main:app --host ${PROJECT_HOST}
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+      - PROJECT_HOST=${PROJECT_HOST}
+      - PROJECT_PORT=${PROJECT_PORT}
+    ports: 
+      - '${PROJECT_PORT}:${PROJECT_PORT}'
+    restart: on-failure:5
