@@ -1,16 +1,47 @@
 version: '3.1'
 
 services:
+  db:
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    image: postgres:15.4
+    ports:
+      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
+    restart: on-failure:5
+    volumes:
+      - ${POSTGRES_DATA}:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin:
+    container_name: pgadmin
+    depends_on:
+      - db
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    image: dpage/pgadmin4:7.7
+    ports:
+      - '${PGADMIN_PORT}:${PGADMIN_PORT}'
+    restart: on-failure:5
+    volumes:
+      - ${PGADMIN_DATA}:/var/lib/pgadmin/
+
   webserver:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: webserver
-    command: uvicorn src.main:app --host ${PROJECT_HOST}
+    command: uvicorn src.main:app --host ${SERVER_HOST}
+    depends_on: 
+      - db
     environment:
-      - PROJECT_NAME=${PROJECT_NAME}
-      - PROJECT_HOST=${PROJECT_HOST}
-      - PROJECT_PORT=${PROJECT_PORT}
+      - SERVER_NAME=${SERVER_NAME}
+      - SERVER_HOST=${SERVER_HOST}
+      - SERVER_PORT=${SERVER_PORT}
     ports: 
-      - '${PROJECT_PORT}:${PROJECT_PORT}'
+      - '${SERVER_PORT}:${SERVER_PORT}'
     restart: on-failure:5
+  
