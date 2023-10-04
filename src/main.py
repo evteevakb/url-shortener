@@ -2,10 +2,10 @@
 
 # import logging
 
-import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
+from .api.v1.base import api_router
 from .core import config
 # from .core.logger import LOGGING
 
@@ -21,13 +21,4 @@ app = FastAPI(
     default_response_class=ORJSONResponse,
 )
 
-if __name__ == '__main__':
-    # Приложение может запускаться командой
-    # `uvicorn main:app --host 0.0.0.0 --port 8080`
-    # но чтобы не терять возможность использовать дебагер,
-    # запустим uvicorn сервер через python
-    uvicorn.run(
-        'main:app',
-        host=config.PROJECT_HOST,
-        port=config.PROJECT_PORT,
-    )
+app.include_router(api_router, prefix="/api/v1")
