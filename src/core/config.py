@@ -1,16 +1,17 @@
-import os
-from logging import config as logging_config
+"""App configuration"""
+from pydantic import PostgresDsn
+from pydantic_settings import BaseSettings
 
-from .logger import LOGGING
 
-# Применяем настройки логирования
-logging_config.dictConfig(LOGGING)
+class AppSettings(BaseSettings):
+    """Contains application settings"""
+    app_title: str = 'URL Shortener'
+    database_dsn: PostgresDsn
 
-# Название проекта. Используется в Swagger-документации
-PROJECT_NAME = os.getenv('PROJECT_NAME', 'library')
-PROJECT_HOST = os.getenv('PROJECT_HOST', '0.0.0.0')
-PROJECT_PORT = int(os.getenv('PROJECT_PORT', '8000'))
+    class Config:
+        """Application environment variables"""
+        env_file = '.env.app'
 
-# Корень проекта
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+app_settings = AppSettings()
  
