@@ -1,6 +1,18 @@
 CREATE TABLE short_urls(
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    initial_url VARCHAR UNIQUE NOT NULL,
-    short_url VARCHAR UNIQUE NOT NULL,
-    usage_num INTEGER NOT NULL
+    initial_url VARCHAR NOT NULL,
+    short_url VARCHAR NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    active BOOLEAN DEFAULT TRUE
+);
+
+
+CREATE TABLE usages(
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    url_id INTEGER NOT NULL,
+    FOREIGN KEY (url_id) REFERENCES short_urls(id),
+    usage_datetime TIMESTAMP NOT NULL DEFAULT NOW(),
+    client_host VARCHAR NOT NULL,
+    client_port INTEGER NOT NULL,
+    blocked BOOLEAN DEFAULT FALSE
 );

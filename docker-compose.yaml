@@ -7,6 +7,11 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     image: postgres:15.4
     ports:
       - '${POSTGRES_PORT}:${POSTGRES_PORT}'
@@ -18,7 +23,8 @@ services:
   pgadmin:
     container_name: pgadmin
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
@@ -36,7 +42,8 @@ services:
     container_name: webserver
     command: uvicorn src.main:app --host ${SERVER_HOST}
     depends_on: 
-      - db
+      db:
+        condition: service_healthy
     environment:
       - SERVER_NAME=${SERVER_NAME}
       - SERVER_HOST=${SERVER_HOST}
@@ -44,4 +51,5 @@ services:
     ports: 
       - '${SERVER_PORT}:${SERVER_PORT}'
     restart: on-failure:5
-  
+    volumes:
+      - ${MIGRATIONS_DATA}:/src/migrations/versions
