@@ -49,19 +49,8 @@ class RepositoryDB(Repository, Generic[ModelTypeT, CreateSchemaTypeT]):
         statement = select(self._model).where(self._model.initial_url==initial_url)
         results = await db.execute(statement=statement)
         return results.scalar_one_or_none()
-    
-    # async def get(self, db: AsyncSession, obj_in: GetSchemaTypeT) -> Optional[ModelTypeT]:
-    #     obj_in_data = jsonable_encoder(obj_in)
-    #     if 'initial_url' in obj_in_data:
-    #         statement = select(self._model).where(self._model.initial_url==
-    #                                               obj_in_data['initial_url'])
-    #     elif 'short_url' in obj_in_data:
-    #         statement = select(self._model).where(self._model.short_url==obj_in_data['short_url'])
-    #     results = await db.execute(statement=statement)
-    #     logger.info(results.scalar_one_or_none())
-    #     return results.scalar_one_or_none()
 
-    # async def get(self, db: AsyncSession, url) -> Optional[ModelTypeT]:
-    #     statement = select(self._model).where(self._model.id == id)
-    #     results = await db.execute(statement=statement)
-    #     return results.scalar_one_or_none()
+    async def get_initial_url(self, db: AsyncSession, short_url: str) -> Optional[ModelTypeT]:
+        statement = select(self._model).where(self._model.short_url==short_url)
+        results = await db.execute(statement=statement)
+        return results.scalar_one_or_none()

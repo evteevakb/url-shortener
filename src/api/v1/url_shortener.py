@@ -1,7 +1,8 @@
 """Contains API endpoints"""
-from typing import Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, status
+from fastapi.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.logger import get_logger
@@ -16,7 +17,7 @@ router = APIRouter()
 
 @router.post('/', response_model=app_schemas.ShortURL, status_code=status.HTTP_201_CREATED)
 async def create_short_url(*, db: AsyncSession = Depends(get_session),
-                           initial_url: app_schemas.InitialURLBase) -> app_schemas.ShortURL:
+                           initial_url: app_schemas.InitialURL) -> Any:
     """Accepts an original URL string to be shortened in the request body and returns a response
         with code `201`."""
     short_url_db = await crud.create(db=db, obj_in=initial_url)
@@ -25,21 +26,14 @@ async def create_short_url(*, db: AsyncSession = Depends(get_session),
     return short_url
 
 
-# @router.get('/{short-url}', response_model=app_schemas.InitialURL,
-#             status_code=status.HTTP_307_TEMPORARY_REDIRECT)
-# async def get_original_url(*, db: AsyncSession = Depends(get_session),
-#                            short_url: app_schemas.ShortURL) -> Optional[app_schemas.InitialURL]:
-#     original_url = await crud.get(db=db, obj_in=short_url)
-#     return original_url
-
-
-
-# @router.get('/{shorten-url-id}', status_code=status.HTTP_307_TEMPORARY_REDIRECT)
-# async def get_original_url():
-#     """GET /<shorten-url-id>
-#     Метод принимает в качестве параметра идентификатор сокращённого URL и возвращает ответ с кодом `307`
-#     и оригинальным URL в заголовке `Location`."""
-#     pass
+@router.get('/{short_url:path}', response_model=app_schemas.InitialURL,
+            status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+async def get_initial_url(*, db: AsyncSession = Depends(get_session), short_url: str) -> Any:
+    logger.info(short_url)
+    initial_url_db = await crud.get_initial_url(db=db, short_url=short_url)
+    if not initial_url_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    return app_schemas.InitialURL(initial_url=initial_url_db.initial_url)
 
 
 # @router.get('/{shorten-url-id}/status')

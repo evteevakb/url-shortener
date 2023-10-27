@@ -12,15 +12,6 @@ class ShortURLBase(BaseModel):
     short_url: str
 
 
-# Properties to receive on entity read
-class InitialURLRead(InitialURLBase):
-    pass
-
-
-class ShortURLRead(ShortURLBase):
-    pass
-
-
 # Properties to receive on entity creation
 class ShortURLCreate(ShortURLBase):
     pass
