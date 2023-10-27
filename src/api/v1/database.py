@@ -8,7 +8,7 @@ from sqlalchemy.sql import text
 
 from ...db.db import get_session
 from ...core.logger import get_logger
-from ...schemas.database import DatabasePing
+from ...schemas.database_schemas import DatabasePing
 
 
 logger = get_logger(__name__)
