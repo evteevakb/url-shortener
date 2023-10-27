@@ -22,7 +22,7 @@ class ShortURLs(Base):
     """Model of the 'short_urls' table"""
     __tablename__ = 'short_urls'
     id = Column(Integer, primary_key=True)
-    initial_url = Column(URLType, nullable=False)
-    short_url = Column(URLType, nullable=False)
+    initial_url = Column(URLType, nullable=False, unique=True)
+    short_url = Column(URLType, nullable=False, unique=True)
     created_at = Column(DateTime, index=True, default=datetime.utcnow)
     active = Column(Boolean, default=True)

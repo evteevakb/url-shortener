@@ -4,8 +4,21 @@ from pydantic import BaseModel
 
 
 # Shared properties
-class ShortURLBase(BaseModel):
+class InitialURLBase(BaseModel):
     initial_url: str
+
+
+class ShortURLBase(BaseModel):
+    short_url: str
+
+
+# Properties to receive on entity read
+class InitialURLRead(InitialURLBase):
+    pass
+
+
+class ShortURLRead(ShortURLBase):
+    pass
 
 
 # Properties to receive on entity creation
@@ -13,9 +26,9 @@ class ShortURLCreate(ShortURLBase):
     pass
 
 
-# Properties to receive on entity update
-class ShortURLUpdate(ShortURLBase):
-    pass
+# # Properties to receive on entity update
+# class ShortURLUpdate(ShortURLBase):
+#     pass
 
 # Properties shared by models stored in DB
 class ShortURLInDBBase(ShortURLBase):
@@ -31,4 +44,7 @@ class ShortURLInDBBase(ShortURLBase):
 
 # Properties to return to client
 class ShortURL(ShortURLBase):
-    short_url: str
+    pass
+
+class InitialURL(InitialURLBase):
+    pass
