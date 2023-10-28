@@ -1,11 +1,12 @@
 """Contains API endpoints"""
-from typing import Any
+from typing import Any, List, Union
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Request, status, Query
 from fastapi.exceptions import HTTPException
 from pyshorteners import Shortener
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .paginator import get_pagination_parameters
 from ...core.logger import get_logger
 from ...db.db import get_session
 from ...schemas import short_url_schemas, usage_schemas
@@ -39,13 +40,14 @@ async def create_short_url(*, db: AsyncSession = Depends(get_session),
                                       short_url=short_url_db.short_url)
 
 
-@router.get('/{short_url:path}', response_model=short_url_schemas.ShortURLBase,
+@router.get('/{url_id}', response_model=short_url_schemas.ShortURLBase,
             status_code=status.HTTP_307_TEMPORARY_REDIRECT)
-async def get_initial_url(*, db: AsyncSession = Depends(get_session), short_url: str,
+async def get_initial_url(*, db: AsyncSession = Depends(get_session), url_id: int,
                           request: Request) -> Any:
     logger.info("Host: %s, port: %s", request.client.host, request.client.port)
     logger.info("Host type: %s, port type: %s", type(request.client.host), type(request.client.port))
-    short_url_db = await short_url_crud.read_by_short_url(database=db, short_url=short_url)
+    short_url_db = await short_url_crud.read(database=db, entity_id=url_id)
+    logger.info(short_url_db.active)
     if not short_url_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     if short_url_db.active is False:
@@ -57,15 +59,22 @@ async def get_initial_url(*, db: AsyncSession = Depends(get_session), short_url:
     return short_url_schemas.ShortURLBase(initial_url=short_url_db.initial_url)
 
 
-# @router.get('/{short_url:path}/status')
-# async def get_usage_status(*, db: AsyncSession = Depends(get_session), short_url: str) -> Any:
-    #     """GET /<shorten-url-id>/status?[full-info]&[max-result=10]&[offset=0]
-    #     Метод принимает в качестве параметра идентификатор сокращённого URL и возвращает информацию о количестве переходов, совершенных по ссылке.
+@router.get('/{url_id}/status', response_model=Union[int, List[usage_schemas.Usage]])
+async def get_usage_status(*, db: AsyncSession = Depends(get_session), url_id: int,
+                           full_info: bool = Query(default=False, alias='full-info'),
+                           pagination_parameters: dict = Depends(get_pagination_parameters)) -> Any:
+    """GET /<shorten-url-id>/status?[full-info]&[max-result=10]&[offset=0]
+    Метод принимает в качестве параметра идентификатор сокращённого URL и возвращает информацию о количестве переходов, совершенных по ссылке.
 
-    #     В ответе может содержаться как общее количество совершенных переходов, так и дополнительная детализированная информация о каждом переходе (наличие **query**-параметра **full-info** и параметров пагинации):
-    #     - дата и время перехода/использования ссылки;
-    #     - информация о клиенте, выполнившем запрос;
-    #     """
+    В ответе может содержаться как общее количество совершенных переходов, так и дополнительная детализированная информация о каждом переходе (наличие **query**-параметра **full-info** и параметров пагинации):
+    - дата и время перехода/использования ссылки;
+    - информация о клиенте, выполнившем запрос;
+    """
+    short_url_db = await short_url_crud.read(database=db, entity_id=url_id)
+    if not short_url_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    return await usage_crud.get_status(database=db, url_id=short_url_db.id, full_info=full_info,
+                                       pagination_parameters=pagination_parameters)
 
 
 @router.delete('/{url_id}', status_code=status.HTTP_200_OK)
