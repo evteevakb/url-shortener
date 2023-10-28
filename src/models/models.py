@@ -15,7 +15,6 @@ class Usages(Base):
     usage_datetime = Column(DateTime, index=True, default=datetime.utcnow)
     client_host = Column(String, nullable=False)
     client_port = Column(Integer, nullable=False)
-    blocked = Column(Boolean, default=False)
 
 
 class ShortURLs(Base):

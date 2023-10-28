@@ -14,5 +14,4 @@ CREATE TABLE usages(
     usage_datetime TIMESTAMP NOT NULL DEFAULT NOW(),
     client_host VARCHAR NOT NULL,
     client_port INTEGER NOT NULL,
-    blocked BOOLEAN DEFAULT FALSE
 );
