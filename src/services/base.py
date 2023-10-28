@@ -1,5 +1,5 @@
 """Contains mandatory methods for communication between the database and the application"""
-from typing import Any, Generic, Optional, Type, TypeVar
+from typing import Generic, Optional, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ from ..core.logger import get_logger
 
 ModelTypeT = TypeVar("ModelTypeT", bound=Base)
 CreateSchemaTypeT = TypeVar("CreateSchemaTypeT", bound=BaseModel)
-# UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
+UpdateSchemaTypeT = TypeVar("UpdateSchemaTypeT", bound=BaseModel)
 
 shortener = Shortener()
 logger = get_logger(__name__)
@@ -30,8 +30,12 @@ class Repository:
     async def get_short_url(self, *args, **kwargs):
         raise NotImplementedError
 
+    async def mark_deleted(self, *args, **kwargs):
+        raise NotImplementedError
 
-class RepositoryDB(Repository, Generic[ModelTypeT, CreateSchemaTypeT]):
+
+class RepositoryDB(Repository, Generic[ModelTypeT, CreateSchemaTypeT, UpdateSchemaTypeT]):
+    """Base class for working with a database"""
     def __init__(self, model: Type[ModelTypeT]):
         self._model = model
 
@@ -54,3 +58,11 @@ class RepositoryDB(Repository, Generic[ModelTypeT, CreateSchemaTypeT]):
         statement = select(self._model).where(self._model.short_url==short_url)
         results = await db.execute(statement=statement)
         return results.scalar_one_or_none()
+
+    async def mark_deleted(self, db: AsyncSession, *, short_url: str) -> ModelTypeT:
+        db_obj = await self.get_initial_url(db, short_url)
+        logger.info(db_obj)
+        db_obj.active = False
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj

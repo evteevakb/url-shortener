@@ -1,3 +1,4 @@
+"""Request and response validation schemes for the models"""
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -5,11 +6,18 @@ from pydantic import BaseModel
 
 # Shared properties
 class InitialURLBase(BaseModel):
+    """Base validation scheme for initial URLs"""
     initial_url: str
 
 
 class ShortURLBase(BaseModel):
+    """Base validation scheme for short URLs"""
     short_url: str
+
+
+# class UsageBase(BaseModel):
+#     """Base validation scheme for URL Shortener usages"""
+#     pass
 
 
 # Properties to receive on entity creation
@@ -17,9 +25,10 @@ class ShortURLCreate(ShortURLBase):
     pass
 
 
-# # Properties to receive on entity update
-# class ShortURLUpdate(ShortURLBase):
-#     pass
+# Properties to receive on entity update
+class ShortURLUpdate(ShortURLBase):
+    pass
+
 
 # Properties shared by models stored in DB
 class ShortURLInDBBase(ShortURLBase):
