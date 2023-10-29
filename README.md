@@ -117,6 +117,12 @@ This service provides functionality to create shortened versions of requested UR
   - `200 OK`: Short URL successfully marked as deleted.
 
 
+## Tests
+
+    docker-compose exec webserver bash
+    pytest tests.py
+
+
 ## Migrations
 
     docker-compose exec webserver bash
