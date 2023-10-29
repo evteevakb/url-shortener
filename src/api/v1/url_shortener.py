@@ -44,6 +44,8 @@ async def create_short_url(*, db: AsyncSession = Depends(get_session),
             obj_in=short_url_schemas.ShortURLCreate(
                 initial_url=entity_in.initial_url,
                 short_url=shortener.tinyurl.short(entity_in.initial_url)))
+        logger.info("Add new shortened URL %s for the original %s", short_url_db.short_url,
+                    short_url_db.initial_url)
     if short_url_db.active is False:
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Item deleted")
     return short_url_schemas.ShortURL(id=short_url_db.id,
@@ -69,14 +71,14 @@ async def get_initial_url(*, db: AsyncSession = Depends(get_session), url_id: in
     Returns:
         short_url_schemas.ShortURLBase: original URL.
     """
-    logger.info("Host: %s, port: %s", request.client.host, request.client.port)
-    logger.info("Host type: %s, port type: %s", type(request.client.host), type(request.client.port))
     short_url_db = await short_url_crud.read(database=db, entity_id=url_id)
-    logger.info(short_url_db.active)
     if not short_url_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     if short_url_db.active is False:
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Item deleted")
+    logger.info("Accessing original URL %s via short URL %s from client with host: %s, port: %s",
+                short_url_db.initial_url, short_url_db.short_url, request.client.host,
+                request.client.port)
     await usage_crud.create(database=db, obj_in=usage_schemas.UsageCreate(
         url_id=short_url_db.id,
         client_host=request.client.host,
@@ -112,6 +114,8 @@ async def get_usage_status(*, db: AsyncSession = Depends(get_session), url_id: i
     short_url_db = await short_url_crud.read(database=db, entity_id=url_id)
     if not short_url_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    logger.info("Accessing usage status of original URL %s with shortened version %s",
+                short_url_db.initial_url, short_url_db.short_url)
     return await usage_crud.get_status(database=db, url_id=short_url_db.id, full_info=full_info,
                                        pagination_parameters=pagination_parameters)
 
@@ -133,4 +137,6 @@ async def delete_url(*, db: AsyncSession = Depends(get_session), url_id: int) ->
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     if short_url_db.active is False:
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Item already deleted")
+    logger.info("Original URL %s with shortened version %s was marked as deleted",
+                short_url_db.initial_url, short_url_db.short_url)
     await short_url_crud.delete(database=db, entity_id=url_id)
