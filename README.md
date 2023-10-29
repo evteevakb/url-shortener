@@ -3,6 +3,12 @@
 This service provides functionality to create shortened versions of requested URLs and offers analysis on the activity of their use. Additionally, the service includes middleware that blocks access from prohibited subnets. The server is hosted at http://localhost:8000, and the PgAdmin for the database can be accessed at http://localhost:80.
 
 
+## Installation
+
+    docker-compose build
+    docker-compose up -d
+
+
 ## Endpoints
 
 ### 1. Ping Database
@@ -109,12 +115,6 @@ This service provides functionality to create shortened versions of requested UR
   - `HTTPException (410)`: If a URL has been already marked as deleted.
 - **Response:**
   - `200 OK`: Short URL successfully marked as deleted.
-
-
-## Installation
-
-    docker-compose build
-    docker-compose up -d
 
 
 ## Migrations
