@@ -1,92 +1,120 @@
 # URL Shortener
 
-Cервис для создания сокращённой формы передаваемых URL и анализа активности их использования.
-
-Кроме этого, выберите из списка дополнительные требования и тоже реализуйте их. У каждого задания есть определённая сложность, от которой зависит количество баллов. Вам необходимо выбрать такое количество заданий, чтобы общая сумма баллов была больше 4. Выбор заданий никак не ограничен: можно выбрать все простые или одно среднее и два простых, или одно продвинутое, или решить все.
-
-## Описание задания
-
-Реализовать `http`-сервис, который обрабатывает поступающие запросы. Сервер стартует по адресу `http://127.0.0.1:8080` (значение по умолчанию, можно изменять).
-
-<details>
-<summary> Список возможных эндпойнтов (можно изменять) </summary>
-
-1. Получить сокращённый вариант переданного URL.
-
-```python
-POST /
-```
-
-Метод принимает в теле запроса строку URL для сокращения и возвращает ответ с кодом `201`.
-
-2. Вернуть оригинальный URL.
-
-```python
-GET /<shorten-url-id>
-```
-
-Метод принимает в качестве параметра идентификатор сокращённого URL и возвращает ответ с кодом `307` и оригинальным URL в заголовке `Location`.
-
-3. Вернуть статус использования URL.
-
-```python
-GET /<shorten-url-id>/status?[full-info]&[max-result=10]&[offset=0]
-```
-
-Метод принимает в качестве параметра идентификатор сокращённого URL и возвращает информацию о количестве переходов, совершенных по ссылке.
-
-В ответе может содержаться как общее количество совершенных переходов, так и дополнительная детализированная информация о каждом переходе (наличие **query**-параметра **full-info** и параметров пагинации):
-- дата и время перехода/использования ссылки;
-- информация о клиенте, выполнившем запрос;
-
-</details>
+This service provides functionality to create shortened versions of requested URLs and offers analysis on the activity of their use. Additionally, the service includes middleware that blocks access from prohibited subnets. The server is hosted at http://localhost:8000, and the PgAdmin for the database can be accessed at http://localhost:80.
 
 
-## Дополнительные требования (отметьте [Х] выбранные пункты):
+## Endpoints
 
-- [Х] (1 балл) Реализуйте метод `GET /ping`, который возвращает информацию о статусе доступности БД.
-- [Х] (1 балл) Реализуйте возможность «удаления» сохранённого URL. Запись должна остаться, но помечаться как удалённая. При попытке получения полного URL возвращать ответ с кодом `410 Gone`.
-- [Х] (2 балла) Реализуйте middlware, блокирующий доступ к сервису из запрещённых подсетей (black list).
-- [ ] (2 балла) Реализуйте возможность передавать ссылки пачками (batch upload).
+### 1. Ping Database
 
-<details>
-<summary> Описание изменений </summary>
-
-- Метод `POST /shorten` принимает в теле запроса список URL в формате:
-
-```python
-[
+- **Endpoint:** `GET /ping`
+- **Description:** Pings the database to check the connection status.
+- **Raises:**
+  - `HTTPException`: If the connection to the database cannot be established.
+- **Response:**
+  - `200 OK`:
+    ```json
     {
-        "original-url": "<URL-for-shorten>"
-    },
-    ...
-]
+      "ping_time": 0.123
+    }
+    ```
+    - `ping_time`: Ping time in seconds.
 
-```
-... и возвращает данные в следующем формате:
+### 2. Create Shortened URL
 
-```python
-[
+- **Endpoint:** `POST /`
+- **Description:** Creates a short URL for the given original URL.
+- **Parameters:**
+  - `entity_in` (required): Original URL to be shortened.
+- **Raises:**
+  - `HTTPException (410)`: If the requested URL is already in the database but marked as deleted.
+- **Response:**
+  - `201 Created`:
+    ```json
     {
-        "short-id": "<shoten-id>",
-        "short-url": "http://...",
+      "id": 123,
+      "original_url": "http://example.com/original",
+      "shortened_url": "http://tinyurl.com/abc123"
+    }
+    ```
+
+### 3. Get Original URL
+
+- **Endpoint:** `GET /{url_id}`
+- **Description:** Returns the original URL corresponding to the given `url_id`.
+- **Parameters:**
+  - `url_id` (required): Unique identifier of the requested URL.
+- **Raises:**
+  - `HTTPException (404)`: If a URL with the requested `url_id` does not exist.
+  - `HTTPException (410)`: If a URL has been marked as deleted.
+- **Response:**
+  - `307 Temporary Redirect`:
+    ```json
+    {
+      "original_url": "http://example.com/original"
+    }
+    ```
+
+### 4. Get Usage Status
+
+- **Endpoint:** `GET /{url_id}/status`
+- **Description:** Returns the usage status of the requested URL.
+- **Parameters:**
+  - `url_id` (required): Unique identifier of the requested URL.
+  - `full_info` (optional): False for obtaining the total number of requests, True for additional detailed information about each request (Default: False).
+  - `pagination_parameters` (optional): Dictionary with pagination parameters (`max_result` for the number of rows returned, `offset` for skipping rows) (Default: `{ "max_result": 10, "offset": 0 }`).
+- **Raises:**
+  - `HTTPException (404)`: If a URL with the requested `url_id` does not exist.
+- **Response:**
+  - `200 OK`:
+    - Total number of requests (if `full_info` is False):
+     ```json
+    {
+      3
+    }
+    ```
+    - List of request details (if `full_info` is True):
+    ```json
+        [
+    {
+        "url_id": 10,
+        "usage_datetime": "2023-10-28T14:14:39.967234",
+        "client_host": "172.19.0.1",
+        "client_port": 58410
     },
-    ...
-]
-```
-</details>
+    {
+        "url_id": 10,
+        "usage_datetime": "2023-10-28T15:01:29.835141",
+        "client_host": "172.19.0.1",
+        "client_port": 58628
+    },
+    {
+        "url_id": 10,
+        "usage_datetime": "2023-10-28T15:22:12.491003",
+        "client_host": "172.19.0.1",
+        "client_port": 58726
+    }
+    ]
+    ```
 
 
+### 5. Delete Short URL
+
+- **Endpoint:** `DELETE /{url_id}`
+- **Description:** Removes a short URL by its ID. The entry in the database remains but is marked as 'deleted'.
+- **Parameters:**
+  - `url_id` (required): Unique identifier of the requested URL.
+- **Raises:**
+  - `HTTPException (404)`: If a URL with the requested `url_id` does not exist.
+  - `HTTPException (410)`: If a URL has been already marked as deleted.
+- **Response:**
+  - `200 OK`: Short URL successfully marked as deleted.
 
 
-## Требования к решению
+## Installation
 
-1. Используйте фреймворк FastAPI. В качестве СУБД используйте PostgreSQL (не ниже 10 версии).
-2. Используйте концепции ООП.
-3. Предусмотрите обработку исключительных ситуаций.
-4. Приведите стиль кода в соответствие pep8, flake8, mypy.
-5. Логируйте результаты действий.
-6. Покройте написанный код тестами.
+    docker-compose build
+    docker-compose up -d
 
 
 ## Migrations
