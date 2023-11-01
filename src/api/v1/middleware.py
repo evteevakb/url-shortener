@@ -2,12 +2,9 @@
 from fastapi import Request, status
 from fastapi.exceptions import HTTPException
 
+from ...core.config import BLACK_LIST
 from ...core.logger import get_logger
 
-
-BLACK_LIST = [
-    "172.19.0.0",
-    ]
 
 logger = get_logger(__name__)
 

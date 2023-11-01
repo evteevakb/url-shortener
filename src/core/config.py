@@ -5,6 +5,11 @@ from pydantic_settings import BaseSettings
 from ..core.logger import set_logger
 
 
+BLACK_LIST = [
+    "172.19.0.0",
+    ]
+
+
 set_logger()
 
 
