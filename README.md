@@ -5,6 +5,8 @@ This service provides functionality to create shortened versions of requested UR
 
 ## Installation
 
+    cp .env.example .env
+    cp .env.app.example .env.app
     docker-compose build
     docker-compose up -d
 
