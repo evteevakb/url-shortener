@@ -6,10 +6,8 @@ import pytest
 
 pytestmark = pytest.mark.asyncio
 
-TEST_INITIAL_URL = ("https://practicum.yandex.ru/learn/async-python/courses/" +
-                    "409da462-1b46-4bb4-9504-d8b89fd91008/sprints/140331/topics/" +
-                    "be94b4e0-249f-4d2a-b2b2-fee7cf371169/lessons/" +
-                    "ebbf7ecc-2be8-40a4-9f43-f81d35f86d9f/")
+TEST_INITIAL_URL = ("https://stackoverflow.com/questions/30256386/" +
+                    "how-to-copy-multiple-files-in-one-layer-using-a-dockerfile")
 
 
 async def test_ping_database(client: AsyncClient) -> None:

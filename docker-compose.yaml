@@ -40,7 +40,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: webserver
-    command: python -m gunicorn -k uvicorn.workers.UvicornWorker -w 4 -b ${SERVER_HOST}:${SERVER_PORT} src.main:app
+    command: python -m gunicorn -k uvicorn.workers.UvicornWorker -w 4 -b ${SERVER_HOST}:${SERVER_PORT} main:app
     depends_on: 
       db:
         condition: service_healthy

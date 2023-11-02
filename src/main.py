@@ -2,9 +2,9 @@
 from fastapi import FastAPI, Depends
 from fastapi.responses import ORJSONResponse
 
-from .api.v1.base import api_router
-from .api.v1.middleware import check_allowed_ip
-from .core.config import app_settings
+from api.v1.base import api_router
+from api.v1.middleware import check_allowed_ip
+from core.config import app_settings
 
 
 app = FastAPI(

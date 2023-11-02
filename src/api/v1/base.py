@@ -1,8 +1,8 @@
 """Contains router with handlers"""
 from fastapi import APIRouter
 
-from .database import router as database_router
-from .url_shortener import router
+from api.v1.database import router as database_router
+from api.v1.url_shortener import router
 
 
 api_router = APIRouter()

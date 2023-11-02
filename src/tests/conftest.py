@@ -6,7 +6,7 @@ from httpx import AsyncClient
 import pytest
 import pytest_asyncio
 
-from src.main import app
+from main import app
 
 
 @pytest.fixture(scope='session')

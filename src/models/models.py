@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy_utils import URLType
 
-from .base import Base
+from models.base import Base
 
 
 class Usages(Base):

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from pydantic import BaseModel
 
-from ..models.base import Base
+from models.base import Base
 
 
 ModelTypeT = TypeVar("ModelTypeT", bound=Base)

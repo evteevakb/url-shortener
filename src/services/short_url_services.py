@@ -4,9 +4,9 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from .base import RepositoryDB
-from ..models.models import ShortURLs as ShortURLsModel
-from ..schemas.short_url_schemas import ShortURLCreate
+from services.base import RepositoryDB
+from models.models import ShortURLs as ShortURLsModel
+from schemas.short_url_schemas import ShortURLCreate
 
 
 class RepositoryShortURL(RepositoryDB[ShortURLsModel, ShortURLCreate]):

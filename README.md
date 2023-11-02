@@ -121,8 +121,7 @@ This service provides functionality to create shortened versions of requested UR
 
 ## Tests
 
-    docker-compose exec webserver bash
-    pytest tests.py
+    docker-compose exec webserver pytest
 
 
 ## Migrations

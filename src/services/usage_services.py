@@ -4,9 +4,9 @@ from typing import Dict, List, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from .base import RepositoryDB
-from ..models.models import Usages as UsagesModel
-from ..schemas.usage_schemas import Usage, UsageCreate
+from services.base import RepositoryDB
+from models.models import Usages as UsagesModel
+from schemas.usage_schemas import Usage, UsageCreate
 
 
 class RepositoryUsage(RepositoryDB[UsagesModel, UsageCreate]):

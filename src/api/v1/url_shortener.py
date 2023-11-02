@@ -6,12 +6,12 @@ from fastapi.exceptions import HTTPException
 from pyshorteners import Shortener
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .paginator import get_pagination_parameters
-from ...core.logger import get_logger
-from ...db.db import get_session
-from ...schemas import short_url_schemas, usage_schemas
-from ...services.short_url_services import short_url_crud
-from ...services.usage_services import usage_crud
+from api.v1.paginator import get_pagination_parameters
+from core.logger import get_logger
+from db.db import get_session
+from schemas import short_url_schemas, usage_schemas
+from services.short_url_services import short_url_crud
+from services.usage_services import usage_crud
 
 
 logger = get_logger(__name__)
