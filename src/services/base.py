@@ -2,6 +2,7 @@
 from typing import Generic, Optional, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from pydantic import BaseModel
@@ -46,9 +47,7 @@ class RepositoryDB(Repository, Generic[ModelTypeT, CreateSchemaTypeT]):
         results = await database.execute(statement=statement)
         return results.scalar_one_or_none()
 
-    async def delete(self, database: AsyncSession, entity_id: int) -> ModelTypeT:
-        db_obj = await self.read(database, entity_id)
-        db_obj.active = False
+    async def delete(self, database: AsyncSession, entity_id: int) -> None:
+        statement = update(self._model).where(self._model.id == entity_id).values(active=False)
+        await database.execute(statement=statement)
         await database.commit()
-        await database.refresh(db_obj)
-        return db_obj
