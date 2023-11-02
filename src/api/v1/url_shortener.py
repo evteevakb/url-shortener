@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.v1.paginator import get_pagination_parameters
 from core.logger import get_logger
 from db.db import get_session
+from models.models import ShortURLs
 from schemas import short_url_schemas, usage_schemas
 from services.short_url_services import short_url_crud
 from services.usage_services import usage_crud
@@ -17,6 +18,22 @@ from services.usage_services import usage_crud
 logger = get_logger(__name__)
 router = APIRouter()
 shortener = Shortener()
+
+
+async def get_url(url_id: int, database: AsyncSession = Depends(get_session)) -> ShortURLs:
+    """Checks if URL exists in the database.
+
+    Args:
+        url_id (int): unique identifier of the requested URL;
+        db (AsyncSession, optional): database session. Defaults to Depends(get_session).
+
+    Returns:
+        short_url_db (ShortURLs): database view for the requested url_id.
+    """
+    short_url_db = await short_url_crud.read(database=database, entity_id=url_id)
+    if not short_url_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    return short_url_db
 
 
 @router.post('/', response_model=short_url_schemas.ShortURL, status_code=status.HTTP_201_CREATED)
@@ -55,13 +72,13 @@ async def create_short_url(*, db: AsyncSession = Depends(get_session),
 
 @router.get('/{url_id}', response_model=short_url_schemas.ShortURLBase,
             status_code=status.HTTP_307_TEMPORARY_REDIRECT)
-async def get_initial_url(*, db: AsyncSession = Depends(get_session), url_id: int,
-                          request: Request) -> Any:
+async def get_initial_url(*, db: AsyncSession = Depends(get_session),
+                          short_url_db: ShortURLs = Depends(get_url), request: Request) -> Any:
     """Returns original URL.
 
     Args:
         db (AsyncSession, optional): database session. Defaults to Depends(get_session);
-        url_id (int): unique identifier of the requested URL;
+        short_url_db (ShortURLs): database view for the requested url_id;
         request (Request): client request.
 
     Raises:
@@ -71,9 +88,6 @@ async def get_initial_url(*, db: AsyncSession = Depends(get_session), url_id: in
     Returns:
         short_url_schemas.ShortURLBase: original URL.
     """
-    short_url_db = await short_url_crud.read(database=db, entity_id=url_id)
-    if not short_url_db:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     if short_url_db.active is False:
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Item deleted")
     logger.info("Accessing original URL %s via short URL %s from client with host: %s, port: %s",
@@ -87,7 +101,8 @@ async def get_initial_url(*, db: AsyncSession = Depends(get_session), url_id: in
 
 
 @router.get('/{url_id}/status', response_model=Union[int, List[usage_schemas.Usage]])
-async def get_usage_status(*, db: AsyncSession = Depends(get_session), url_id: int,
+async def get_usage_status(*, db: AsyncSession = Depends(get_session),
+                           short_url_db: ShortURLs = Depends(get_url),
                            full_info: bool = Query(default=False, alias='full-info'),
                            pagination_parameters: Dict[str, int] =
                            Depends(get_pagination_parameters)) -> Any:
@@ -95,7 +110,7 @@ async def get_usage_status(*, db: AsyncSession = Depends(get_session), url_id: i
 
     Args:
         db (AsyncSession, optional): database session. Defaults to Depends(get_session);
-        url_id (int): unique identifier of the requested URL;
+        short_url_db (ShortURLs): database view for the requested url_id;
         full_info (bool): False for obtaining total number of requests, True -
             for additional detailed information about each request: date and time of each
             request, information about the client who completed the request. Defaults to False;
@@ -111,9 +126,6 @@ async def get_usage_status(*, db: AsyncSession = Depends(get_session), url_id: i
             otherwise a dictionary with information about date and time of each request and
             client host and port who completed the request.
     """
-    short_url_db = await short_url_crud.read(database=db, entity_id=url_id)
-    if not short_url_db:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     logger.info("Accessing usage status of original URL %s with shortened version %s",
                 short_url_db.initial_url, short_url_db.short_url)
     return await usage_crud.get_status(database=db, url_id=short_url_db.id, full_info=full_info,
@@ -121,20 +133,18 @@ async def get_usage_status(*, db: AsyncSession = Depends(get_session), url_id: i
 
 
 @router.delete('/{url_id}', status_code=status.HTTP_200_OK)
-async def delete_url(*, db: AsyncSession = Depends(get_session), url_id: int) -> None:
+async def delete_url(*, db: AsyncSession = Depends(get_session),
+                     short_url_db: ShortURLs = Depends(get_url), url_id: int) -> None:
     """Removes short URL by its ID. The entry in the database remains, but is marked as 'deleted'.
 
     Args:
         db (AsyncSession, optional): database session. Defaults to Depends(get_session);
-        url_id (int): unique identifier of the requested URL.
+        short_url_db (ShortURLs): database view for the requested url_id.
 
     Raises:
         HTTPException (404): if a URL with requested url_id does not exist;
         HTTPException (410): if a URL has been already marked as deleted.
     """
-    short_url_db = await short_url_crud.read(database=db, entity_id=url_id)
-    if not short_url_db:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     if short_url_db.active is False:
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Item already deleted")
     logger.info("Original URL %s with shortened version %s was marked as deleted",
