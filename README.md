@@ -126,7 +126,4 @@ This service provides functionality to create shortened versions of requested UR
 
 ## Migrations
 
-    docker-compose exec webserver bash
-    alembic current
-    alembic revision --autogenerate -m 01_initial-db
-    exit
+    docker-compose exec webserver alembic upgrade head
