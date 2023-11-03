@@ -17,7 +17,7 @@ def event_loop() -> Generator:
     loop.close()
 
 
-@pytest_asyncio.fixture(scope='function')
+@pytest_asyncio.fixture()
 async def client() -> AsyncGenerator:
     """Creates an async testing client"""
     async with AsyncClient(app=app, base_url='http://testserver') as async_client:
