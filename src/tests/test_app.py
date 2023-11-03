@@ -8,7 +8,7 @@ from main import app
 
 pytestmark = pytest.mark.asyncio
 
-TEST_INITIAL_URL = ("https://practicum.yandex.ru/")
+TEST_INITIAL_URL = ("https://www.overleaf.com/project/636b72c38c5d7674fff43028")
 
 
 async def test_ping_database(client: AsyncClient) -> None:

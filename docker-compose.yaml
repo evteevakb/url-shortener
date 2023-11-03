@@ -18,7 +18,6 @@ services:
     restart: on-failure:5
     volumes:
       - ${POSTGRES_DATA}:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin:
     container_name: pgadmin
